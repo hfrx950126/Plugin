@@ -20,6 +20,7 @@ public class EvilInstrumentation1 extends Instrumentation {
     @Override
     public Activity newActivity(ClassLoader cl, String className, Intent intent) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         Log.e(TAG,"到此一游");
+        Intent rawIntent = intent.getParcelableExtra(HookHelper.EXTRA_TARGET_INTENT);
         return mBase.newActivity(cl, className, intent);
 
     }

@@ -1,5 +1,8 @@
 package cloud.login.loginsdk.cn.cmcm.com.myapplication;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.pm.ComponentInfo;
 import android.util.Log;
 
 import java.lang.reflect.InvocationHandler;
@@ -15,8 +18,35 @@ class MockClass1 implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Log.e("baobao",method.getName());
         if("startActivity".equals(method.getName())){
-            Log.e("baobao",method.getName());
+            // 只拦截这个方法
+            //替换参数，任你所为；甚至替换原始Activity启动别的Activity偷梁换柱
+            //找到参数里面的第一个Intent 对象
+            Intent raw;
+            int index = 0;
+
+            for(int i=0; i< args.length;i++){
+                if(args[i] instanceof Intent){
+                    index = i;
+                    break;
+                }
+            }
+            raw = (Intent) args[index];
+            Intent  newIntent = new Intent();
+
+            //替身Activity的包名，也就是我们自己的包名
+            String stubPackage = raw.getComponent().getPackageName();
+
+            // 这里我们把启动的Activity 临时替换为StubActivity
+            ComponentName componentName = new ComponentName(stubPackage,StubActivity.class.getName());
+            newIntent.setComponent(componentName);
+            newIntent.putExtra(AMSHookHelper.EXTRA_TARGET_INTENT,raw);
+
+            //替换掉Intent，达到欺骗AMS的目的
+            args[index] = newIntent;
+
+            Log.d(TAG,"hook success");
             return method.invoke(mBase,args);
         }
         return method.invoke(mBase,args);
